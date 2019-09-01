@@ -146,7 +146,7 @@ def save_checkpoint(model, train_data, save_directory):
 
     torch.save(checkpoint, save_directory)
 
-def main(data_dir):
+def main(data_dir, learning_rate, epochs):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     train_dir = data_dir + '/train'
@@ -162,14 +162,15 @@ def main(data_dir):
     test(model, criterion, testloader)
     
     save_checkpoint(model, train_data, save_directory)
-    
+    return model
+
 if __name__ == '__main__':
     parser = argparse.AugumentParser(
         description = 'Train a image classifier using transfer learning')
 
-    parser.add_argument('data_directory', default = 'flowers')
+    parser.add_argument('data_dir', default = 'flowers')
     parser.add_argument('learning_rate', default = 0.001)
     parser.add_argument('epochs', default = 3)
     
     input_args = parser.parse_args()
-    main(input_args.data_directory, input_args.learning_rate, input_args.epochs)
+    main(input_args.data_dir, input_args.learning_rate, input_args.epochs)
