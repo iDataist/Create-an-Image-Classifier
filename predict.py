@@ -1,14 +1,12 @@
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import torch 
 from torch import nn, optim
-import torch.nn.functional as F
-from torchvision import datasets, transforms, models
-from time import time
+from torchvision import models
 from PIL import Image
 import json
+import argparser
 %config InlineBackend.figure_format = 'retina'
 
 """
@@ -21,9 +19,6 @@ Use a mapping of categories to real names: python predict.py input checkpoint --
 Use GPU for inference: python predict.py input checkpoint --gpu
 """  
 
-with open('cat_to_name.json', 'r') as f:
-    cat_to_name = json.load(f)
-    
 def load_checkpoint(save_directory):
     checkpoint = torch.load(save_directory)
     model = models.alexnet(pretrained = True)
@@ -85,7 +80,7 @@ def imshow(image, ax=None, title=None):
     
     return ax
 
-def predict(image_path, model, topk=5):
+def predict(image_path, model, topk):
     ''' Predict the class (or classes) of an image using a trained deep learning model.
     '''    
     image = process_image(image_path)  
@@ -106,10 +101,10 @@ def predict(image_path, model, topk=5):
     top_class = [idx_to_class[i] for i in top_class]
     return top_p, top_class
 
-def view_classify(image_path, model):
+def view_classify(image_path, model, topk):
     ''' Function for viewing an image and it's predicted classes.
     '''
-    probs, classes = predict(image_path, model, topk=5)
+    probs, classes = predict(image_path, model, topk)
     names = [cat_to_name[c] for c in classes]
     flower = cat_to_name[image_path.split('/')[2]]
     
@@ -118,9 +113,32 @@ def view_classify(image_path, model):
     ax1.axis('off')
     ax1.set_title(flower)
     
-    ax2.barh(np.arange(5), np.flip(probs, axis = 0))
+    ax2.barh(np.arange(topk), np.flip(probs, axis = 0))
     ax2.set_aspect(0.1)
-    ax2.set_yticks(np.arange(5))
+    ax2.set_yticks(np.arange(topk))
     ax2.set_yticklabels(np.flip(names, axis = 0), size='small');
     ax2.set_xlim(0, 1.1)
     plt.tight_layout()
+    
+def main(save_directory, image_path, topk, category_names):
+    model = load_checkpoint(save_directory)
+    
+    image = process_image(image_path)
+    imshow(image, ax=None, title=None)
+    probs, classes = predict(image_path, model, topk)
+    with open(category_names, 'r') as f:
+        cat_to_name = json.load(f)    
+    
+    view_classify(image_path, model, topk)
+    return probs, classes
+    
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        'Predict flower name from an image along with the probability of that name.')
+    parser.add_argument('save_directory', default = 'checkpoint.pth')
+    parser.add_argument('image_path', default = 'flowers/test/1/image_06743.jpg')
+    parser.add_argument('--topk', default = 5, type = int)
+    parser.add_argument('--category_names', default = 'cat_to_name.json')
+    input_args = parser.parse_args()
+    
+    main(save_directory, image_path, topk, category_names)
