@@ -1,10 +1,7 @@
-import pandas as pd
 import numpy as np
 import torch 
 from torch import nn, optim
-import torch.nn.functional as F
 from torchvision import datasets, transforms, models
-from time import time
 import argparse
 
 
@@ -49,7 +46,7 @@ def load_validation_or_test_data(data_directory):
     dataloader = torch.utils.data.DataLoader(data, batch_size=64)
     return data, dataloader
 
-def build_model():
+def build_model(learning_rate):
     model = models.alexnet(pretrained=True)
     
     # Freeze parameters so we don't backprop through them
@@ -71,7 +68,7 @@ def build_model():
     criterion = nn.NLLLoss()
 
     # Only train the classifier parameters, feature parameters are frozen
-    optimizer = optim.Adam(model.classifier.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.classifier.parameters(), learning_rate)
 
     model.to(device)    
     return model, optimizer, criterion
@@ -165,8 +162,14 @@ def main(data_dir):
     test(model, criterion, testloader)
     
     save_checkpoint(model, train_data, save_directory)
-    if __name__ == '__main__':
-        parser = argparse.AugumentParser(
-            description = 'Train a image classifier using transfer learning')
-        
-        parser.add_argument('data_directory', default = 'flowers')
+    
+if __name__ == '__main__':
+    parser = argparse.AugumentParser(
+        description = 'Train a image classifier using transfer learning')
+
+    parser.add_argument('data_directory', default = 'flowers')
+    parser.add_argument('learning_rate', default = 0.001)
+    parser.add_argument('epochs', default = 3)
+    
+    input_args = parser.parse_args()
+    main(input_args.data_directory, input_args.learning_rate, input_args.epochs)
