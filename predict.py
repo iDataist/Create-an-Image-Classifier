@@ -141,4 +141,4 @@ if __name__ == '__main__':
     parser.add_argument('--category_names', default = 'cat_to_name.json')
     input_args = parser.parse_args()
     
-    main(save_directory, image_path, topk, category_names)
+    main(input_args.save_directory, input_args.image_path, input_args.topk, input_args.category_names)
