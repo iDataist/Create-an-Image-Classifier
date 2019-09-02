@@ -146,9 +146,7 @@ def save_checkpoint(model, train_data, save_directory):
 
     torch.save(checkpoint, save_directory)
 
-def main(data_dir, architecture, hidden_units, learning_rate, epochs):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+def main(data_dir, gpu, architecture, hidden_units, learning_rate, epochs):     
     train_dir = data_dir + '/train'
     valid_dir = data_dir + '/valid'
     test_dir = data_dir + '/test'   
@@ -156,6 +154,8 @@ def main(data_dir, architecture, hidden_units, learning_rate, epochs):
     train_data, trainloader = load_train_data(train_dir)
     valid_data, validloader = load_validation_or_test_data(valid_dir)
     test_data, testloader = load_validation_or_test_data(test_dir)
+    
+    device = torch.device("cuda" if (torch.cuda.is_available() and gpu) else "cpu")
     
     model, optimizer, criterion = build_model(architecture, hidden_units, learning_rate)
     model = train_and_validate(model, optimizer, criterion, trainloader, validloader, epochs)
@@ -168,11 +168,12 @@ if __name__ == '__main__':
     parser = argparse.AugumentParser(
         description = 'Train a image classifier using transfer learning')
 
-    parser.add_argument('data_dir', default = 'flowers')
-    parser.add_argument('architecture', default = 'alexnet')
-    parser.add_argument('hidden_units', default = [2014, 512])
-    parser.add_argument('learning_rate', default = 0.001)
-    parser.add_argument('epochs', default = 3)
+    parser.add_argument('--d', '--data_dir', default = 'flowers')
+    parser.add_argument('--g', '--gpu', default = True)
+    parser.add_argument('--a','--architecture', default = 'alexnet')
+    parser.add_argument('--h','--hidden_units', default = [2014, 512])
+    parser.add_argument('--l', '--learning_rate', default = 0.001, type = float)
+    parser.add_argument('--e','--epochs', default = 3)
     
     args = parser.parse_args()
-    main(args.data_dir, args.architecture, args.hidden_units, args.learning_rate, args.epochs)
+    main(args.data_dir, args.gpu, args.architecture, args.hidden_units, args.learning_rate, args.epochs)
