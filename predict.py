@@ -7,7 +7,7 @@ from torchvision import models
 from PIL import Image
 import json
 import argparser
-%config InlineBackend.figure_format = 'retina'
+# %config InlineBackend.figure_format = 'retina'
 
 """
 Predict flower name from an image with predict.py along with the probability of that name. That is, you'll pass in a single image /path/to/image and return the flower name and class probability.
@@ -135,10 +135,10 @@ def main(save_directory, image_path, topk, category_names):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         'Predict flower name from an image along with the probability of that name.')
-    parser.add_argument('save_directory', default = 'checkpoint.pth')
-    parser.add_argument('image_path', default = 'flowers/test/1/image_06743.jpg')
-    parser.add_argument('--topk', default = 5, type = int)
-    parser.add_argument('--category_names', default = 'cat_to_name.json')
+    parser.add_argument('--s','--save_directory', default = 'checkpoint.pth')
+    parser.add_argument('--i','--image_path', default = 'flowers/test/1/image_06743.jpg')
+    parser.add_argument('--t','--topk', default = 5, type = int)
+    parser.add_argument('--c','--category_names', default = 'cat_to_name.json')
     input_args = parser.parse_args()
     
     main(input_args.save_directory, input_args.image_path, input_args.topk, input_args.category_names)
