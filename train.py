@@ -17,7 +17,7 @@ Set hyperparameters: python train.py data_dir --learning_rate 0.01 --hidden_unit
 Use GPU for training: python train.py data_dir --gpu
 """
     
-def load_train_data(data_directory):
+def load_train_data(data_dir):
     transforms = transforms.Compose([transforms.RandomRotation(30),
                                      transforms.RandomResizedCrop(224),
                                      transforms.RandomHorizontalFlip(),
@@ -26,13 +26,13 @@ def load_train_data(data_directory):
                                                           [0.229, 0.224, 0.225])])
     
     # Load the datasets with ImageFolder
-    data = datasets.ImageFolder(data_directory, transform =  transforms)
+    data = datasets.ImageFolder(data_dir, transform =  transforms)
     
     # Using the image datasets and the trainforms, define the dataloaders
     dataloader = torch.utils.data.DataLoader(data, batch_size=64, shuffle=True)
     return data, dataloader 
 
-def load_validation_or_test_data(data_directory):    
+def load_validation_or_test_data(data_dir):    
     transforms = transforms.Compose([transforms.Resize(255),
                                      transforms.CenterCrop(224),
                                      transforms.ToTensor(),
@@ -40,28 +40,28 @@ def load_validation_or_test_data(data_directory):
                                                           [0.229, 0.224, 0.225])])
 
     # Load the datasets with ImageFolder
-    data = datasets.ImageFolder(data_directory, transform = transforms)
+    data = datasets.ImageFolder(data_dir, transform = transforms)
 
     # Using the image datasets and the trainforms, define the dataloaders
     dataloader = torch.utils.data.DataLoader(data, batch_size=64)
     return data, dataloader
 
-def build_model(learning_rate):
-    model = models.alexnet(pretrained=True)
-    
+def build_model(architecture, hidden_units, learning_rate):
+     
+    exec(f"model = models.{architecture}(pretrained=True)")
     # Freeze parameters so we don't backprop through them
     for param in model.parameters():
         param.requires_grad = False
 
     from collections import OrderedDict
     model.classifier = nn.Sequential(OrderedDict([
-                              ('fc1', nn.Linear(9216, 2048)),
+                              ('fc1', nn.Linear(9216, hidden_units[0])),
                               ('relu', nn.ReLU()),
                               ('dropout1', nn.Dropout(0.3)), 
-                              ('fc2', nn.Linear(2048, 512)),
+                              ('fc2', nn.Linear(hidden_units[0], hidden_units[1])),
                               ('relu', nn.ReLU()),
                               ('dropout2', nn.Dropout(0.3)), 
-                              ('fc3', nn.Linear(512, 102)),    
+                              ('fc3', nn.Linear(hidden_units[1], 102)),    
                               ('output', nn.LogSoftmax(dim=1))
                               ]))
 
@@ -146,7 +146,7 @@ def save_checkpoint(model, train_data, save_directory):
 
     torch.save(checkpoint, save_directory)
 
-def main(data_dir, learning_rate, epochs):
+def main(data_dir, architecture, hidden_units, learning_rate, epochs):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     train_dir = data_dir + '/train'
@@ -157,7 +157,7 @@ def main(data_dir, learning_rate, epochs):
     valid_data, validloader = load_validation_or_test_data(valid_dir)
     test_data, testloader = load_validation_or_test_data(test_dir)
     
-    model, optimizer, criterion = build_model()
+    model, optimizer, criterion = build_model(architecture, hidden_units, learning_rate)
     model = train_and_validate(model, optimizer, criterion, trainloader, validloader, epochs)
     test(model, criterion, testloader)
     
@@ -169,8 +169,10 @@ if __name__ == '__main__':
         description = 'Train a image classifier using transfer learning')
 
     parser.add_argument('data_dir', default = 'flowers')
+    parser.add_argument('architecture', default = 'alexnet')
+    parser.add_argument('hidden_units', default = [2014, 512])
     parser.add_argument('learning_rate', default = 0.001)
     parser.add_argument('epochs', default = 3)
     
-    input_args = parser.parse_args()
-    main(input_args.data_dir, input_args.learning_rate, input_args.epochs)
+    args = parser.parse_args()
+    main(args.data_dir, args.architecture, args.hidden_units, args.learning_rate, args.epochs)
