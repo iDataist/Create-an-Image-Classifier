@@ -6,7 +6,8 @@ from torch import nn, optim
 from torchvision import models
 from PIL import Image
 import json
-import argparser
+import argparse
+
 # %config InlineBackend.figure_format = 'retina'
 
 """
@@ -19,9 +20,10 @@ Use a mapping of categories to real names: python predict.py input checkpoint --
 Use GPU for inference: python predict.py input checkpoint --gpu
 """  
 
-def load_checkpoint(save_directory):
+def load_checkpoint(save_directory, architecture):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     checkpoint = torch.load(save_directory)
-    model = models.alexnet(pretrained = True)
+    model = getattr(models, architecture)(pretrained=True)
     for param in model.parameters():
         param.requires_grad = False
         
@@ -38,7 +40,7 @@ def process_image(image_path):
     im = Image.open(image_path)
  
     # Resize the image
-    im = im.resize((256, 256))
+    im.thumbnail((256, 256), Image.ANTIALIAS)
     
     # Crop out the center 224x224 portion of the image
     width, height = im.size 
@@ -83,6 +85,7 @@ def imshow(image, ax=None, title=None):
 def predict(image_path, model, topk):
     ''' Predict the class (or classes) of an image using a trained deep learning model.
     '''    
+    device = 'cpu'
     image = process_image(image_path)  
     image = torch.from_numpy(image) 
     image = image.unsqueeze_(0)
@@ -119,9 +122,10 @@ def view_classify(image_path, model, topk):
     ax2.set_yticklabels(np.flip(names, axis = 0), size='small');
     ax2.set_xlim(0, 1.1)
     plt.tight_layout()
+    plt.show()
     
-def main(save_directory, image_path, topk, category_names):
-    model = load_checkpoint(save_directory)
+def main(save_directory, architecture, image_path, topk, category_names):
+    model = load_checkpoint(save_directory, architecture)
     
     image = process_image(image_path)
     imshow(image, ax=None, title=None)
@@ -135,10 +139,12 @@ def main(save_directory, image_path, topk, category_names):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         'Predict flower name from an image along with the probability of that name.')
-    parser.add_argument('--s','--save_directory', default = 'checkpoint.pth')
-    parser.add_argument('--i','--image_path', default = 'flowers/test/1/image_06743.jpg')
-    parser.add_argument('--t','--topk', default = 5, type = int)
-    parser.add_argument('--c','--category_names', default = 'cat_to_name.json')
-    input_args = parser.parse_args()
+    parser.add_argument('--save_directory', default = 'ImageClassifier/checkpoint.pth', action='store_true')
+    parser.add_argument('--architecture', default = 'alexnet', action='store_true') 
+    parser.add_argument('--image_path', default = 'ImageClassifier/flowers/test/1/image_06743.jpg', action='store_true')
+    parser.add_argument('--topk', default = 5, type = int)
+    parser.add_argument('--category_names', default = 'ImageClassifier/cat_to_name.json', action='store_true')
+    args = parser.parse_args()
     
-    main(input_args.save_directory, input_args.image_path, input_args.topk, input_args.category_names)
+    main(args.save_directory, args.architecture, args.image_path, args.topk, args.category_names)
+    
