@@ -2,8 +2,8 @@ import numpy as np
 import torch 
 from torch import nn, optim
 from torchvision import datasets, transforms, models
+from collections import OrderedDict
 import argparse
-
 
 """
 Train a new network on a data set with train.py
@@ -18,7 +18,7 @@ Use GPU for training: python train.py data_dir --gpu
 """
     
 def load_train_data(data_dir):
-    transforms = transforms.Compose([transforms.RandomRotation(30),
+    transform = transforms.Compose([transforms.RandomRotation(30),
                                      transforms.RandomResizedCrop(224),
                                      transforms.RandomHorizontalFlip(),
                                      transforms.ToTensor(),
@@ -26,54 +26,57 @@ def load_train_data(data_dir):
                                                           [0.229, 0.224, 0.225])])
     
     # Load the datasets with ImageFolder
-    data = datasets.ImageFolder(data_dir, transform =  transforms)
+    data = datasets.ImageFolder(data_dir, transform =  transform)
     
     # Using the image datasets and the trainforms, define the dataloaders
     dataloader = torch.utils.data.DataLoader(data, batch_size=64, shuffle=True)
     return data, dataloader 
 
 def load_validation_or_test_data(data_dir):    
-    transforms = transforms.Compose([transforms.Resize(255),
+    transform = transforms.Compose([transforms.Resize(255),
                                      transforms.CenterCrop(224),
                                      transforms.ToTensor(),
                                      transforms.Normalize([0.485, 0.456, 0.406],
                                                           [0.229, 0.224, 0.225])])
 
     # Load the datasets with ImageFolder
-    data = datasets.ImageFolder(data_dir, transform = transforms)
+    data = datasets.ImageFolder(data_dir, transform = transform)
 
     # Using the image datasets and the trainforms, define the dataloaders
     dataloader = torch.utils.data.DataLoader(data, batch_size=64)
     return data, dataloader
 
-def build_model(architecture, hidden_units, learning_rate):
-     
-    exec(f"model = models.{architecture}(pretrained=True)")
+def build_model(architecture, input_units, hidden_units, learning_rate):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+    model = getattr(models, architecture)(pretrained=True)
     # Freeze parameters so we don't backprop through them
     for param in model.parameters():
         param.requires_grad = False
+    
+    if model.classifier: 
+        model.classifier = nn.Sequential(OrderedDict([
+                                  ('fc1', nn.Linear(input_units, hidden_units[0])),
+                                  ('relu', nn.ReLU()),
+                                  ('dropout1', nn.Dropout(0.3)), 
+                                  ('fc2', nn.Linear(hidden_units[0], hidden_units[1])),
+                                  ('relu', nn.ReLU()),
+                                  ('dropout2', nn.Dropout(0.3)), 
+                                  ('fc3', nn.Linear(hidden_units[1], 102)),    
+                                  ('output', nn.LogSoftmax(dim=1))
+                                  ]))
 
-    from collections import OrderedDict
-    model.classifier = nn.Sequential(OrderedDict([
-                              ('fc1', nn.Linear(9216, hidden_units[0])),
-                              ('relu', nn.ReLU()),
-                              ('dropout1', nn.Dropout(0.3)), 
-                              ('fc2', nn.Linear(hidden_units[0], hidden_units[1])),
-                              ('relu', nn.ReLU()),
-                              ('dropout2', nn.Dropout(0.3)), 
-                              ('fc3', nn.Linear(hidden_units[1], 102)),    
-                              ('output', nn.LogSoftmax(dim=1))
-                              ]))
+        criterion = nn.NLLLoss()
 
-    criterion = nn.NLLLoss()
+        # Only train the classifier parameters, feature parameters are frozen
+        optimizer = optim.Adam(model.classifier.parameters(), learning_rate)
 
-    # Only train the classifier parameters, feature parameters are frozen
-    optimizer = optim.Adam(model.classifier.parameters(), learning_rate)
-
-    model.to(device)    
-    return model, optimizer, criterion
-
+        model.to(device)    
+        return model, optimizer, criterion
+    else:
+        print('The archetecture does not have the classifier attribute')
+        
 def train_and_validate(model, optimizer, criterion, trainloader, validloader, epochs): 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     steps = 0
     running_loss = 0
     print_every = 32
@@ -117,7 +120,8 @@ def train_and_validate(model, optimizer, criterion, trainloader, validloader, ep
                 model.train()
     return model
 
-def test(model, criterion, testloader):       
+def test(model, criterion, testloader): 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     test_loss = 0
     accuracy = 0
     model.eval()
@@ -146,7 +150,7 @@ def save_checkpoint(model, train_data, save_directory):
 
     torch.save(checkpoint, save_directory)
 
-def main(data_dir, gpu, architecture, hidden_units, learning_rate, epochs):     
+def main(data_dir, gpu, architecture, input_units, hidden_units, learning_rate, epochs, save_directory):     
     train_dir = data_dir + '/train'
     valid_dir = data_dir + '/valid'
     test_dir = data_dir + '/test'   
@@ -157,7 +161,7 @@ def main(data_dir, gpu, architecture, hidden_units, learning_rate, epochs):
     
     device = torch.device("cuda" if (torch.cuda.is_available() and gpu) else "cpu")
     
-    model, optimizer, criterion = build_model(architecture, hidden_units, learning_rate)
+    model, optimizer, criterion = build_model(architecture, input_units, hidden_units, learning_rate)
     model = train_and_validate(model, optimizer, criterion, trainloader, validloader, epochs)
     test(model, criterion, testloader)
     
@@ -165,15 +169,17 @@ def main(data_dir, gpu, architecture, hidden_units, learning_rate, epochs):
     return model
 
 if __name__ == '__main__':
-    parser = argparse.AugumentParser(
+    parser = argparse.ArgumentParser(
         description = 'Train a image classifier using transfer learning')
 
-    parser.add_argument('--d', '--data_dir', default = 'flowers')
-    parser.add_argument('--g', '--gpu', default = True)
-    parser.add_argument('--a','--architecture', default = 'alexnet')
-    parser.add_argument('--h','--hidden_units', default = [2014, 512])
-    parser.add_argument('--l', '--learning_rate', default = 0.001, type = float)
-    parser.add_argument('--e','--epochs', default = 3)
+    parser.add_argument('--data_dir', default = 'ImageClassifier/flowers', action='store_true')
+    parser.add_argument('--gpu', default = True, action='store_true')
+    parser.add_argument('--architecture', default = 'alexnet')
+    parser.add_argument('--input_units', default = 9216, type = int)
+    parser.add_argument('--hidden_units', nargs = '+', default = [2014, 512], type = int)
+    parser.add_argument('--learning_rate', default = 0.001, type = float)
+    parser.add_argument('--epochs', default = 1, type = int)
+    parser.add_argument('--save_directory', default = 'ImageClassifier/checkpoint.pth', action='store_true')
     
     args = parser.parse_args()
-    main(args.data_dir, args.gpu, args.architecture, args.hidden_units, args.learning_rate, args.epochs)
+    main(args.data_dir, args.gpu, args.architecture, args.input_units, args.hidden_units, args.learning_rate, args.epochs, args.save_directory)
