@@ -4,7 +4,7 @@ The goal of this project is to develop code for an image classifier built with P
 
 - Train a new network on a data set with train.py
 
-  Prints out training loss, validation loss, and validation accuracy as the network trains: python train.py data_dir
+  Prints out training loss, validation loss, and validation accuracy as the network trains: ```python train.py data_dir```
 
   Set directory to save checkpoints: python train.py data_dir --save_dir save_directory
 
@@ -21,5 +21,5 @@ The goal of this project is to develop code for an image classifier built with P
   Return top K most likely classes: python predict.py input checkpoint --top_k 3
 
   Use a mapping of categories to real names: python predict.py input checkpoint --category_names cat_to_name.json
-  
+
   Use GPU for inference: python predict.py input checkpoint --gpu
