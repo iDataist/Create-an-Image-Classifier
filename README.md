@@ -13,7 +13,7 @@ I trained an image classifier to recognize different species of flowers, using [
 
 <img src='assets/Flowers.png' width=500px>
 
-## Project steps
+## Project Steps
 
 - Develop code for an image classifier built with PyTorch. The code development process is documented in [Image Classifier Project.ipynb](https://github.com/iDataist/Create-an-Image-Classifier/blob/master/Image%20Classifier%20Project.ipynb).
   - Load and preprocess the image dataset
