@@ -10,22 +10,22 @@ The goal of this project is to develop code for an image classifier built with P
 ## Commands
 - **Train a new network on a data set with train.py**
 
-  - Prints out training loss, validation loss, and validation accuracy as the network trains: ```python train.py data_dir```
+  - Basic usage: ```python train.py --data_dir /path/to/images```
 
-  - Set directory to save checkpoints: ```python train.py data_dir --save_dir save_directory```
+  - Set directory to save checkpoints: ```python train.py --save_directory /path/to/checkpoint```
 
-  - Choose architecture: ```python train.py data_dir --arch "alexnet"```
+  - Choose architecture: ```python train.py --architecture "alexnet"```
 
-  - Set hyperparameters: ```python train.py data_dir --learning_rate 0.001 --epochs 3```
+  - Set hyperparameters: ```python train.py --hidden_units 2014 512 --learning_rate 0.001 --epochs 3```
 
-  - Use GPU for training: ```python train.py data_dir --gpu```
+  - Use GPU for training: ```python train.py --gpu```
 
 - **Predict flower name from an image with predict.py along with the probability of that name**
 
-  - Pass in a single image /path/to/image and return the flower name and class probability: ```python predict.py /path/to/image checkpoint```
+  - Basic usage: ```python predict.py --image_path /path/to/image --save_directory /path/to/checkpoint```
 
-  - Return top K most likely classes: ```python predict.py input checkpoint --top_k 3```
+  - Return top K most likely classes: ```python predict.py --topk 3```
 
-  - Use a mapping of categories to real names: ```python predict.py input checkpoint --category_names cat_to_name.json```
+  - Use a mapping of categories to real names: ```python predict.py --category_names cat_to_name.json```
 
-  - Use GPU for inference: ```python predict.py input checkpoint --gpu```
+  - Use GPU for inference: ```python predict.py --gpu```
