@@ -140,11 +140,11 @@ def main(save_directory, architecture, image_path, topk, category_names):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         'Predict flower name from an image along with the probability of that name.')
-    parser.add_argument('--save_directory', default = 'ImageClassifier/checkpoint.pth', action='store_true')
-    parser.add_argument('--architecture', default = 'alexnet', action='store_true') 
-    parser.add_argument('--image_path', default = 'ImageClassifier/flowers/test/1/image_06743.jpg', action='store_true')
+    parser.add_argument('--save_directory', default = 'ImageClassifier/checkpoint.pth')
+    parser.add_argument('--architecture', default = 'alexnet') 
+    parser.add_argument('--image_path', default = 'ImageClassifier/flowers/test/1/image_06743.jpg')
     parser.add_argument('--topk', default = 5, type = int)
-    parser.add_argument('--category_names', default = 'ImageClassifier/cat_to_name.json', action='store_true')
+    parser.add_argument('--category_names', default = 'ImageClassifier/cat_to_name.json')
     args = parser.parse_args()
     
     main(args.save_directory, args.architecture, args.image_path, args.topk, args.category_names)
