@@ -43,5 +43,3 @@ I trained an image classifier to recognize different species of flowers, using [
     - Use a mapping of categories to real names: ```python predict.py --category_names cat_to_name.json```
 
     - Use GPU for inference: ```python predict.py --gpu```
-
-## About Deep Learning
