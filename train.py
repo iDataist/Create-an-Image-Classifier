@@ -172,14 +172,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description = 'Train a image classifier using transfer learning')
 
-    parser.add_argument('--data_dir', default = 'ImageClassifier/flowers', action='store_true')
+    parser.add_argument('--data_dir', default = 'ImageClassifier/flowers')
     parser.add_argument('--gpu', default = True, action='store_true')
     parser.add_argument('--architecture', default = 'alexnet')
     parser.add_argument('--input_units', default = 9216, type = int)
     parser.add_argument('--hidden_units', nargs = '+', default = [2014, 512], type = int)
     parser.add_argument('--learning_rate', default = 0.001, type = float)
     parser.add_argument('--epochs', default = 1, type = int)
-    parser.add_argument('--save_directory', default = 'ImageClassifier/checkpoint.pth', action='store_true')
+    parser.add_argument('--save_directory', default = 'ImageClassifier/checkpoint.pth')
     
     args = parser.parse_args()
     main(args.data_dir, args.gpu, args.architecture, args.input_units, args.hidden_units, args.learning_rate, args.epochs, args.save_directory)
