@@ -7,6 +7,7 @@ from torchvision import models
 from PIL import Image
 import json
 import argparse
+plt.switch_backend('agg')
 
 # %config InlineBackend.figure_format = 'retina'
 
@@ -147,4 +148,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     main(args.save_directory, args.architecture, args.image_path, args.topk, args.category_names)
-    
