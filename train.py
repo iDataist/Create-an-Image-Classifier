@@ -166,7 +166,7 @@ if __name__ == '__main__':
     parser.add_argument('--input_units', default = 9216, type = int)
     parser.add_argument('--hidden_units', nargs = '+', default = [2014, 512], type = int)
     parser.add_argument('--learning_rate', default = 0.001, type = float)
-    parser.add_argument('--epochs', default = 1, type = int)
+    parser.add_argument('--epochs', default = 3, type = int)
     parser.add_argument('--save_directory', default = 'ImageClassifier/checkpoint.pth')
     
     args = parser.parse_args()
