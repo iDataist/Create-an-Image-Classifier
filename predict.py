@@ -9,18 +9,6 @@ import json
 import argparse
 plt.switch_backend('agg')
 
-# %config InlineBackend.figure_format = 'retina'
-
-"""
-Predict flower name from an image with predict.py along with the probability of that name. That is, you'll pass in a single image /path/to/image and return the flower name and class probability.
-
-Basic usage: python predict.py /path/to/image checkpoint
-Options:
-Return top KK most likely classes: python predict.py input checkpoint --top_k 3
-Use a mapping of categories to real names: python predict.py input checkpoint --category_names cat_to_name.json
-Use GPU for inference: python predict.py input checkpoint --gpu
-"""  
-
 def load_checkpoint(save_directory, architecture):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     checkpoint = torch.load(save_directory)
@@ -90,6 +78,7 @@ def predict(image_path, model, topk):
     image = process_image(image_path)  
     image = torch.from_numpy(image) 
     image = image.unsqueeze_(0)
+    image = image.float()
     image = image.to(device)
     
     model.to(device)       
@@ -105,12 +94,14 @@ def predict(image_path, model, topk):
     top_class = [idx_to_class[i] for i in top_class]
     return top_p, top_class
 
-def view_classify(image_path, model, topk):
+def view_classify(category_names, image_path, model, topk):
     ''' Function for viewing an image and it's predicted classes.
     '''
+    with open(category_names, 'r') as f:
+        cat_to_name = json.load(f) 
     probs, classes = predict(image_path, model, topk)
     names = [cat_to_name[c] for c in classes]
-    flower = cat_to_name[image_path.split('/')[2]]
+    flower = cat_to_name[image_path.split('/')[3]]
     
     fig, (ax1, ax2) = plt.subplots(figsize=(6,9), nrows=2)
     ax1.imshow(Image.open(image_path))
@@ -131,10 +122,8 @@ def main(save_directory, architecture, image_path, topk, category_names):
     image = process_image(image_path)
     imshow(image, ax=None, title=None)
     probs, classes = predict(image_path, model, topk)
-    with open(category_names, 'r') as f:
-        cat_to_name = json.load(f)    
-    
-    view_classify(image_path, model, topk)
+      
+    view_classify(category_names, image_path, model, topk)
     return probs, classes
     
 if __name__ == '__main__':
