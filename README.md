@@ -1,7 +1,7 @@
 # Create an Image Classifier
 
 ## Project Overview
-Going forward, AI algorithms will be incorporated into more and more everyday applications. For example, you might want to include an image classifier in a smart phone app. Imagine an app where you take a picture of a car, it tells you what the make and model is, then looks up information about it. To do this, you'd use a deep learning model trained on hundreds of thousands of car images as part of the overall application architecture. A large part of software development in the future will be using these types of models as common parts of applications. The goal of this project is to develop code for an image classifier built with PyTorch, and then convert it into a command line application.
+ I crated an image classification application using a deep neural network. This application trains a deep learning model on a dataset of images, and then uses the trained model to classify new images. 
 
 ## Key Skills Demonstrated
 - PyTorch and neural networks
